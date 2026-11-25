@@ -1,0 +1,17 @@
+# Runtime dependencies. Pin ranges, not exact versions, so security patches
+# can be applied without a code change; lockfiles belong to the deployment.
+Django>=5.2,<6.0
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.4,<6.0
+django-cors-headers>=4.6,<5.0
+django-environ>=0.11,<1.0
+argon2-cffi>=23.1,<26.0
+
+# Background processing
+celery>=5.4,<6.0
+redis>=5.2,<7.0
+
+# PostgreSQL driver (Django 5.2 expects psycopg 3). The pure-Python package is
+# used so every platform installs cleanly; the Docker image provides libpq.
+# Install psycopg[binary] locally if you want the C speed-up.
+psycopg>=3.2,<4.0

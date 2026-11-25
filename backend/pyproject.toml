@@ -1,0 +1,36 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4", "SIM", "DJ"]
+ignore = [
+    # Formatter handles line breaks; E501 would flag long strings it cannot split.
+    "E501",
+    # Django settings star-imports are intentional per environment module.
+    "F403",
+    "F405",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]
+"tests/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "*_tests.py"]
+testpaths = ["tests", "apps"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::DeprecationWarning:apps.*"]
+
+[tool.coverage.run]
+source = ["apps", "common"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+skip_empty = true

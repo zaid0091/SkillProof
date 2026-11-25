@@ -1,0 +1,11 @@
+"""Submissions: Student submissions, validation, and execution status.
+
+Models for this module arrive in Phase 5 (SP-017, SP-018). The app boundary is
+created in Phase 1 so that later migrations land in the module that owns the
+data; see docs/tad.md section 5.2 for module responsibilities.
+"""
+
+from __future__ import annotations
+
+# Models are intentionally absent until Phase 5. Do not create schemas here for
+# other modules to satisfy an early demo: ownership must stay with the module.

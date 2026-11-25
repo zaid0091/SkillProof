@@ -1,0 +1,141 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-skillproof}
+      POSTGRES_USER: ${POSTGRES_USER:-skillproof}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skillproof}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-skillproof} -d ${POSTGRES_DB:-skillproof}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/backend.Dockerfile
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-skillproof}:${POSTGRES_PASSWORD:-skillproof}@postgres:5432/${POSTGRES_DB:-skillproof}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/backend.Dockerfile
+    restart: unless-stopped
+    command: celery -A config worker -l info
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-skillproof}:${POSTGRES_PASSWORD:-skillproof}@postgres:5432/${POSTGRES_DB:-skillproof}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/backend.Dockerfile
+    restart: unless-stopped
+    command: celery -A config beat -l info
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-skillproof}:${POSTGRES_PASSWORD:-skillproof}@postgres:5432/${POSTGRES_DB:-skillproof}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infrastructure/frontend.Dockerfile
+    restart: unless-stopped
+    command: npm run dev -- --hostname 0.0.0.0
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # Phase 5: isolated evaluation worker. Kept behind a profile so the default
+  # `docker compose up` does not start an execution sandbox that has no work yet.
+  assessment-worker:
+    profiles: ["assessment"]
+    build:
+      context: ./infrastructure/assessment-worker
+      dockerfile: Dockerfile
+    restart: "no"
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /work:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.5
+
+volumes:
+  pgdata:
+  redisdata:

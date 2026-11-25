@@ -348,7 +348,7 @@ Implement:
 
 **Objective:** Establish data ownership and multi-tenant organizational boundaries.
 
-**Associated backlog:** SP-010, SP-011, SP-027, SP-031
+**Associated backlog:** SP-010, SP-011, SP-012, SP-027, SP-031
 
 ## 7.1 Student Profiles
 

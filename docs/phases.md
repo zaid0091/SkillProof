@@ -297,6 +297,7 @@ Implement ownership, public profile visibility, organization membership, and mul
 
 - SP-010 — Create Student Profile.
 - SP-011 — Manage Technical Skills.
+- SP-012 — Generate Public Skill Profile.
 - SP-027 — Create Employer Organization.
 - SP-031 — Create University Organization Module.
 

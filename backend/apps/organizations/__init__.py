@@ -1,0 +1,1 @@
+"""The organizations domain module."""

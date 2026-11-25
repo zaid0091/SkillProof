@@ -1,0 +1,12 @@
+"""Assessments domain module."""
+
+from __future__ import annotations
+
+from django.apps import AppConfig
+
+
+class AssessmentsConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.assessments"
+    label = "assessments"
+    verbose_name = "Assessments"

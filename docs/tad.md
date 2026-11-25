@@ -215,7 +215,7 @@ Responsible for:
 | Tailwind CSS | Styling |
 | React Hook Form | Form management |
 | Zod | Client-side validation |
-| TanStack Query | API state and caching |
+| TanStack Query | API state and caching (using Axios for HTTP transport) |
 | Recharts | Analytics visualization |
 
 ## 3.2 Backend

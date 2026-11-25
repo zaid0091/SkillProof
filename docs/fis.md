@@ -305,6 +305,7 @@ Example routes:
 | `/student/skills` | Verified skill profile |
 | `/employer/dashboard` | Employer overview |
 | `/employer/candidates` | Candidate search |
+| `/employer/applications` | Candidate application pipeline and status updates |
 | `/employer/internships` | Internship management |
 | `/university/dashboard` | University analytics |
 | `/admin/dashboard` | Administrative overview |
@@ -343,7 +344,7 @@ Production environments shall use HTTPS.
 
 ### 6.2 Centralized API Client
 
-Axios shall be configured as a centralized API client.
+Axios shall be configured as the centralized HTTP transport, and TanStack Query shall provide API request state, caching, retries, and invalidation.
 
 The API client shall provide:
 
@@ -605,6 +606,7 @@ The frontend shall support application statuses such as:
 - Submitted
 - Under Review
 - Shortlisted
+- Interview
 - Rejected
 - Accepted
 - Withdrawn
